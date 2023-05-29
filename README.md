@@ -8,3 +8,4 @@ The library includes the following indicators to date contained in a separate Pi
 
 - ADW - Colour Trend - [Published Script](https://www.tradingview.com/script/AFZ7CFdm-ADW-Colour-Trend/)
 - ADW - Momentum - [Published Script](https://www.tradingview.com/script/p8CsPGUb-ADW-Momentum/)
+- ADW - Volatility Map - [Published Script](https://www.tradingview.com/script/tREldEYH-ADW-Volatility-Map/)

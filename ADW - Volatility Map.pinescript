@@ -1,0 +1,50 @@
+// © Andrew Wilkinson
+
+//@version=5
+indicator(title='ADW - Volatility Map', overlay=true, precision=0)
+
+awaitBarConfirmation = false
+
+cciLength = 20
+atrLength = 14
+
+//----- COLORS
+lowTranspColor = color.new(color.green, 85)
+highTranspColor = color.new(color.red, 85)
+extremelyLowTranspColor = color.new(color.green, 70)
+extremelyHighTranspColor = color.new(color.red, 70)
+
+//----- HELPERS
+commodityChannelIndex(src, length) =>
+    ma = ta.sma(src, length)
+    (src - ma) / (0.015 * ta.dev(src, length))
+
+cciInterpretations(cciValue) =>
+    isLow = cciValue < 0
+    isHigh = cciValue > 0
+    isExtremelyLow = cciValue <= -100
+    isExtremelyHigh = cciValue >= 100
+    [isLow, isHigh, isExtremelyLow, isExtremelyHigh]
+
+//----- VALUES
+atrValue = ta.atr(atrLength)
+atrCci = commodityChannelIndex(atrValue, cciLength)
+trCci = commodityChannelIndex(ta.tr, cciLength)
+
+[atrIsLow, atrIsHigh, atrIsExtremelyLow, atrIsExtremelyHigh] = cciInterpretations(atrCci)
+[trIsLow, trIsHigh, trIsExtremelyLow, trIsExtremelyHigh] = cciInterpretations(trCci)
+
+//----- RENDER
+readyToRender = awaitBarConfirmation ? barstate.isconfirmed : true
+
+shouldHighlightAtr = readyToRender and (atrIsLow or atrIsHigh)
+shouldHighlightTr = readyToRender and (trIsLow or trIsHigh)
+
+atrHighlightColor = atrIsExtremelyLow ? extremelyLowTranspColor : atrIsExtremelyHigh ? extremelyHighTranspColor : atrIsLow ? lowTranspColor : atrIsHigh ? highTranspColor : na
+trHighlightColor = trIsExtremelyLow ? extremelyLowTranspColor : 
+                   trIsExtremelyHigh ? extremelyHighTranspColor : na
+
+bgColor = shouldHighlightAtr ? atrHighlightColor : na
+bgcolor(bgColor)
+
+plot(shouldHighlightTr ? trCci : na, color=trHighlightColor, linewidth=2, title="TR CCI Line")
