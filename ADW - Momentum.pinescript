@@ -1,0 +1,55 @@
+// © Andrew Wilkinson
+
+//@version=5
+indicator(title='ADW - Momentum', overlay=false)
+
+// ----------------------- INPUTS -----------------------
+
+Len = input.int(100, title='RMI: Averaging Length', minval=1)
+Mom = input.int(2, title='RMI: Momentum Lookback', minval=1)
+OVB = input.int(80, title='RMI: Upper Boundary', minval=51, maxval=100)
+OVS = input.int(20, title='RMI: Lower Boundary', minval=0, maxval=49)
+
+// EMA Lengths
+emaLen1 = input.int(5, title='EMA: Fast Signal', minval=1)
+emaLen2 = input.int(12, title='EMA: Standard Signal', minval=1)
+emaLen3 = input.int(26, title='EMA: Slow Signal', minval=1)
+
+// Colors inputs
+color_rmi = input.color(color.black, title="Color RMI")
+color_slow_ma = input.color(color.red, title="Color Slow MA")
+color_fill = input.color(color.green, title="Color Fill")
+
+// ----------------------- RMI CALCULATION -----------------------
+
+emaInc = ta.ema(math.max(close - close[Mom], 0), Len)
+emaDec = ta.ema(math.max(close[Mom] - close, 0), Len)
+RMI = emaDec == 0 ? 0 : 100 - 100 / (1 + emaInc / emaDec)
+
+// ----------------------- PLOTTING -----------------------
+
+plot(OVB, title='OverB', color=color.new(color.black, 0))
+plot(OVS, title='OverS', color=color.new(color.black, 0))
+hline(50, linestyle=hline.style_dashed)
+r1 = plot(RMI, color=color.new(color_rmi, 0), linewidth=1)
+
+// EMAs calculations
+fastmaOut = ta.ema(RMI, emaLen1)
+standardmaOut = ta.ema(RMI, emaLen2)
+slowmaOut = ta.ema(RMI, emaLen3)
+
+m3 = plot(slowmaOut, title='Slow MA', style=plot.style_line, color=color.new(color_slow_ma, 0), linewidth=1)
+fill(r1, m3, color=color.new(color_fill, 70))
+
+// ----------------------- CONDITIONS -----------------------
+
+uparrow = RMI > slowmaOut
+downarrow = RMI < slowmaOut
+
+buycond = uparrow
+sellcond = downarrow
+
+// ----------------------- ALERTS -----------------------
+
+alertcondition(buycond, title='Bull', message='Momentum has flipped bullish')
+alertcondition(sellcond, title='Bear', message='Momentum has flipped bearish.')

@@ -1,0 +1,51 @@
+// © Andrew Wilkinson
+
+//@version=5
+indicator(title='ADW - Colour Trend', overlay=true)
+
+f_p(_length, price) =>
+    float _max = ta.highest(_length)
+    float _min = ta.lowest(_length)
+    100 * (price - _max) / (_max - _min)
+
+int length = input(12)
+bool show_barcolor = input(true)
+
+var float cycle_avg = na
+var int cycle_counter = na
+var int cycle_count = na
+var int cycle_trend = 1
+var color cycle_col = na
+
+float ph = f_p(length, high)
+float pl = f_p(length, low)
+float avg = math.avg(ph, pl)
+float mean = ta.cum(avg) / (bar_index + 1)
+
+if cycle_trend < 0 and ph >= 0.0
+    cycle_counter := 0
+    cycle_trend := 1
+    cycle_col := color.lime
+    cycle_count := nz(cycle_count) + 1
+    cycle_avg *= (1 - 2 / cycle_count) + nz(cycle_counter[1]) * (2 / cycle_count)
+    cycle_avg
+if cycle_trend > 0 and pl <= -100.0
+    cycle_counter := 0
+    cycle_trend := -1
+    cycle_col := color.red
+    cycle_count := nz(cycle_count) + 1
+    cycle_avg *= (1 - 2 / cycle_count) + nz(cycle_counter[1]) * (2 / cycle_count)
+    cycle_avg
+
+color col = na
+if show_barcolor
+    col := avg > -40 ? color.green : avg < -60 ? color.red : color.silver
+barcolor(col)
+
+bull_trend = col[1] != color.green and col == color.green
+bear_trend = col[1] != color.red and col == color.red
+no_trend = col[1] != color.silver and col == color.silver
+
+alertcondition(bull_trend, title='Bull Trend', message='Trend has flipped in bullish favour')
+alertcondition(bear_trend, title='Bear Trend', message='Trend has flipped in bearish favour')
+alertcondition(no_trend, title='No Trend', message='No strong trend in favour')
